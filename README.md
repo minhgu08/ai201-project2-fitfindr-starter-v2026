@@ -39,44 +39,38 @@
 
 ## What This Does
 
-<!-- Three or four sentences: what a user asks for, and what they get back. -->
+FitFindr will search the provided clothing listings using a description, size, and maximum price. It will use a matching item and the user's wardrobe to suggest an outfit, then generate a short fit-card caption. If no listings match, it will stop and explain what the user could change.
 
+### Setup and data notes
+
+- Environment check: 10 passed, 0 failed.
+- Dataset: 40 listings and 10 wardrobe items.
+- Listings include `id`, `title`, `description`, `style_tags`, `size`, and `price`.
+- Sizes have different formats, such as `M`, `S/M`, and `W30 L30`; some brands are null.
+- The starter query runs and reports that the planning loop is not built yet.
 
 
 ---
 
 ## Tool Inventory
 
-<!-- Four lines per tool. This is worth 2 points and it's the single most
-     common place students lose them.
+### `search_listings(description: str, size: str | None = None, max_price: float | None = None)`
 
-     "Returns a list" earns NOTHING. The description has to say what is IN
-     the list.
+- **What it does:** Searches the clothing listings for description keywords and optional size and price filters.
+- **Returns:** A list of matching listing dictionaries, best match first. Each listing includes its `id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`.
+- **When it has nothing:** Returns an empty list (`[]`).
 
-     The empty case isn't optional either — it's the thing your loop branches
-     on, and if you don't decide it here you'll discover it as a crash in
-     Milestone 5. -->
+### `suggest_outfit(new_item: dict, wardrobe: dict)`
 
-### `search_listings`
+- **What it does:** Suggests outfits using a selected listing and the user’s wardrobe.
+- **Returns:** A non-empty string with one or two outfit suggestions.
+- **When the wardrobe is empty:** Returns general styling advice for the item.
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+### `create_fit_card(outfit: str, new_item: dict)`
 
-### `suggest_outfit`
-
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
-
-### `create_fit_card`
-
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Writes a short social caption about the selected item and outfit.
+- **Returns:** A two-to-four-sentence caption mentioning the item, its price, its platform, and its style.
+- **When the outfit is empty:** Returns a descriptive message instead of raising an error.
 
 ---
 
@@ -147,15 +141,15 @@ $ python -c "from tools import create_fit_card; ..."
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked ChatGPT to help me finish the three blank acceptance criteria and their reasons, and tell me where to put them in `criteria.md`.
+- *What came back:* It suggested measurable checks for passing the same listing between tools, including key details in a fit card, and respecting a price limit.
+- *What I changed:* I used those ideas to fill in criteria 3–5 and wrote reasons tied to the session, model-generated captions, and listing prices.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked ChatGPT to review my completed criteria and tell me whether they were clear.
+- *What came back:* It said the targets were measurable and suggested formatting the code references and using a specific price example for criterion 5.
+- *What I changed:* I kept criterion 5 general so it applies to any maximum price, and noted the formatting suggestion for a final cleanup.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
