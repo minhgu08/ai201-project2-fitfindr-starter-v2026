@@ -19,7 +19,7 @@ type, exactly what it returns, and what it returns when it has nothing to give.
 That last line is what your loop branches on. "Returns a list" earns nothing —
 the description has to say what is *in* the list.
 """
-
+import re
 import config  # noqa: F401 — you'll use this in search_listings
 from generate import generate
 from utils.data_loader import load_listings
@@ -78,8 +78,46 @@ def search_listings(
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
-    # TODO: replace this with your implementation
-    return []
+    # TODO:     import re
+
+    def words(text):
+        return re.findall(r"[a-z0-9]+", str(text).lower())
+
+    query_words = set(words(description))
+    if not query_words:
+        return []
+
+    matches = []
+
+    for listing in load_listings():
+        price = listing.get("price")
+        if max_price is not None and (
+            price is None or float(price) > max_price
+        ):
+            continue
+
+        if size is not None:
+            requested_size = words(size)
+            listing_size = set(words(listing.get("size", "")))
+            if not all(token in listing_size for token in requested_size):
+                continue
+
+        searchable_text = " ".join([
+            str(listing.get("title", "")),
+            str(listing.get("description", "")),
+            str(listing.get("category", "")),
+            " ".join(listing.get("style_tags", [])),
+        ])
+        overlap = query_words.intersection(words(searchable_text))
+
+        if overlap:
+            matches.append((len(overlap), listing))
+
+    matches.sort(key=lambda result: result[0], reverse=True)
+    return [
+        listing
+        for score, listing in matches[:config.SEARCH_RESULT_LIMIT]
+    ]
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
