@@ -13,7 +13,7 @@
 > python app.py ask 'vintage graphic tee under $30'
 > ```
 >
-> All three tools are stubs, so that last command will do nothing useful yet.
+> The tools now run individually. The planning loop isn’t built yet, so app.py ask won’t use them until agent.py is wired up.
 > That's the starting position.
 >
 > **The rest of this file is your submission.** Fill it in as you go.
@@ -63,6 +63,7 @@ FitFindr will search the provided clothing listings using a description, size, a
 ### `suggest_outfit(new_item: dict, wardrobe: dict)`
 
 - **What it does:** Suggests outfits using a selected listing and the user’s wardrobe.
+- **Inputs:** `new_item` (`dict`), `wardrobe` (`dict`).
 - **Returns:** A non-empty string with one or two outfit suggestions.
 - **When the wardrobe is empty:** Returns general styling advice for the item.
 
@@ -120,7 +121,22 @@ $ python -c "from tools import search_listings; print([(x['id'], x['title'], x['
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ (.venv) C:\Users\SN\CP_201\W3\ai201-project2-fitfindr-starter-v2026>python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+Here are two practical, everyday outfits featuring your new Vintage Levi's 501s:
+
+### Outfit 1: Clean & Casual Streetwear
+* **Base:** Vintage Levi's 501 Jeans + **White ribbed tank top** (w_003) tucked in.
+* **Layer:** **Oversized grey crewneck sweatshirt** (w_004) worn over top.
+* **Footwear:** **Chunky white sneakers** (w_007).
+* **Accessories:** **Black crossbody bag** (w_010).
+* **Why it works:** The fitted white tank provides a clean contrast to the oversized grey crewneck and straight-leg fit of the 501s. It's an easy, comfortable off-duty look.
+
+### Outfit 2: Edgy Vintage Contrast
+* **Top:** **White ribbed tank top** (w_003) + **Black cropped zip hoodie** (w_005) worn unzipped.
+* **Outerwear:** **Vintage black denim jacket** (w_006) for a layered double-denim-adjacent vibe.
+* **Footwear:** **Black combat boots** (w_008) — let the hem of the 501s break right at the top of the boots.
+* **Accessories:** **Brown leather belt** (w_009) to anchor the waist.
+* **Why it works:** Pairing medium-wash blue denim with black outerwear and boots creates a balanced, high-contrast streetwear look that leans into the 501s' vintage aesthetic.
 
 ```
 

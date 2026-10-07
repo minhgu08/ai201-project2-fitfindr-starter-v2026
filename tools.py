@@ -19,6 +19,7 @@ type, exactly what it returns, and what it returns when it has nothing to give.
 That last line is what your loop branches on. "Returns a list" earns nothing —
 the description has to say what is *in* the list.
 """
+import json
 import re
 import config  # noqa: F401 — you'll use this in search_listings
 from generate import generate
@@ -151,7 +152,37 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
     # TODO: replace this with your implementation
-    return ""
+    items = wardrobe.get("items", [])
+    item_details = json.dumps(new_item, indent=2)
+    wardrobe_details = json.dumps(items, indent=2)
+
+    if items:
+        wardrobe_instruction = (
+            "Suggest one or two outfits using specific pieces from the "
+            "user's wardrobe. Name the pieces you use."
+        )
+    else:
+        wardrobe_instruction = (
+            "The wardrobe is empty. Give one or two general outfit ideas "
+            "for this item without pretending to know what the user owns."
+        )
+
+    prompt = f"""
+    New thrifted item:
+    {item_details}
+
+    Wardrobe items:
+    {wardrobe_details if items else "No wardrobe items provided."}
+
+    {wardrobe_instruction}
+    Keep the advice practical and concise.
+    """
+
+    response = generate(
+        prompt,
+        system="You are a practical personal stylist. Give specific, wearable advice.",
+    )
+    return response.strip() or "Try pairing this item with simple, comfortable basics."
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
