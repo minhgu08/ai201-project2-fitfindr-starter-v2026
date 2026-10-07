@@ -141,7 +141,8 @@ Here are two practical, everyday outfits featuring your new Vintage Levi's 501s:
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
+Just scored these Vintage Levi's 501 Jeans — Medium Wash on depop for $38.00! They feature a classic look with light fading at the knees that adds to the vintage vibe. Style them simply with jeans and white sneakers for an effortless streetwear outfit.
 
 ```
 

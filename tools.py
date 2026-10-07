@@ -222,4 +222,38 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
     """
     # TODO: replace this with your implementation
-    return ""
+    title = new_item.get("title", "this item")
+    price = new_item.get("price")
+    platform = new_item.get("platform", "an online marketplace")
+
+    if price is None:
+        price_text = "a price not listed"
+    else:
+        price_text = f"${float(price):.2f}"
+
+    if not outfit.strip():
+        return (
+            f"I found {title} for {price_text} on {platform}, "
+            "but no outfit suggestion is available yet."
+        )
+
+    prompt = f"""
+    Write a natural, short social-media caption about this thrift find.
+    Use two to four sentences. Mention the exact item title, its price, and
+    the platform once each. Use the outfit suggestion to describe the style.
+    Do not invent details that are not provided.
+
+    Item: {json.dumps(new_item, indent=2)}
+    Price to mention: {price_text}
+    Platform to mention: {platform}
+    Outfit suggestion: {outfit}
+    """
+
+    response = generate(
+        prompt,
+        system="You write concise, natural captions for secondhand fashion finds.",
+    )
+    return response.strip() or (
+        f"Found {title} for {price_text} on {platform}. "
+        "It pairs well with the outfit ideas above."
+    )
