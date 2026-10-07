@@ -13,7 +13,7 @@
 > python app.py ask 'vintage graphic tee under $30'
 > ```
 >
-> The tools now run individually. The planning loop isn’t built yet, so app.py ask won’t use them until agent.py is wired up.
+> The tools now run individually.
 > That's the starting position.
 >
 > **The rest of this file is your submission.** Fill it in as you go.
@@ -47,7 +47,7 @@ FitFindr will search the provided clothing listings using a description, size, a
 - Dataset: 40 listings and 10 wardrobe items.
 - Listings include `id`, `title`, `description`, `style_tags`, `size`, and `price`.
 - Sizes have different formats, such as `M`, `S/M`, and `W30 L30`; some brands are null.
-- The starter query runs and reports that the planning loop is not built yet.
+- The planning loop connects the three tools. Try it with `python app.py ask 'vintage graphic tee under $30'`.
 
 
 ---
@@ -88,13 +88,13 @@ FitFindr will search the provided clothing listings using a description, size, a
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If `search_listings` returns no matches, `run_agent()` stores an error message in the session and returns before calling the other tools. Otherwise, it stores the first match as `session["selected_item"]`, passes it to `suggest_outfit`, then passes the outfit and selected item to `create_fit_card`.
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** Regular expressions extract the size and price limit. The remaining text becomes the search description.
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** `run_agent()` stores the parsed description, size, and price in `session["parsed"]`, then stores search results in `session["search_results"]`. If there is a match, the first listing goes in `session["selected_item"]`; the outfit suggestion and fit card are stored in `session["outfit_suggestion"]` and `session["fit_card"]`. The loop checks its iteration count with `trace.check_iterations()`.
 
 ---
 
@@ -108,7 +108,33 @@ FitFindr will search the provided clothing listings using a description, size, a
 **One full query**
 
 ```
-$ python app.py ask '...'
+$python app.py ask "vintage graphic tee under $30"
+
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Here are two practical, wearable outfits using your new Y2K butterfly baby tee and pieces from your wardrobe:
+
+### Outfit 1: High-Contrast Streetwear (Y2K Meets Baggy Denim)
+*The fitted, cropped silhouette of the baby tee balances out the volume of the baggy jeans for an authentic early-2000s look.*
+
+*   **Top:** Y2K Butterfly Baby Tee
+*   **Bottoms:** Baggy straight-leg jeans, dark wash (`w_001`)
+*   **Outerwear:** Vintage black denim jacket (`w_006`)
+*   **Shoes:** Chunky white sneakers (`w_007`)
+*   **Bag:** Black crossbody bag (`w_010`)
+
+### Outfit 2: Casual Earth Tones
+*Playing on the softer pink and purple tones in the butterfly graphic by pairing the tee with relaxed neutrals.*
+
+*   **Top:** Y2K Butterfly Baby Tee
+*   **Bottoms:** Wide-leg khaki trousers (`w_002`)
+*   **Accessory:** Brown leather belt (`w_009`) worn with the trousers
+*   **Shoes:** Chunky white sneakers (`w_007`)
+*   **Bag:** Black crossbody bag (`w_010`)
+
+  Fit card: Score this Y2K Baby Tee — Butterfly Print for just $18.00! It’s giving major early-2000s vibes, perfect for pairing with baggy denim and a vintage black jacket for an authentic streetwear look. Grab it now over on depop before it's gone.
+
+0 model calls this session, 2 served from cache
 
 ```
 

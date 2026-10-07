@@ -12,7 +12,7 @@ Build and test your three tools in `tools.py` first. Then come here.
 
     python agent.py          runs both example paths below
 """
-
+import re
 import config
 import trace
 from tools import search_listings, suggest_outfit, create_fit_card
@@ -107,8 +107,59 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     """
     session = new_session(query, wardrobe)
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    price_match = re.search(
+        r"\b(?:under|below|less than|max(?:imum)?(?: price)?)\s*\$?(\d+(?:\.\d+)?)",
+        query,
+        re.IGNORECASE,
+    )
+    size_match = re.search(r"\bsize\s+([A-Za-z0-9/]+)", query, re.IGNORECASE)
+
+    description = query
+    if price_match:
+        description = description.replace(price_match.group(0), " ")
+    if size_match:
+        description = description.replace(size_match.group(0), " ")
+    description = re.sub(r"\s+", " ", description).strip(" ,.")
+
+    session["parsed"] = {
+        "description": description,
+        "size": size_match.group(1) if size_match else None,
+        "max_price": float(price_match.group(1)) if price_match else None,
+    }
+
+    steps = ("search_listings", "suggest_outfit", "create_fit_card")
+
+    for count, step in enumerate(steps, start=1):
+        trace.check_iterations(count)
+
+        if step == "search_listings":
+            session["search_results"] = search_listings(
+                description=session["parsed"]["description"],
+                size=session["parsed"]["size"],
+                max_price=session["parsed"]["max_price"],
+            )
+
+            if not session["search_results"]:
+                session["error"] = (
+                    "No listings matched. Try broader keywords, a different "
+                    "size, or a higher price limit."
+                )
+                return session
+
+            session["selected_item"] = session["search_results"][0]
+
+        elif step == "suggest_outfit":
+            session["outfit_suggestion"] = suggest_outfit(
+                session["selected_item"],
+                session["wardrobe"],
+            )
+
+        elif step == "create_fit_card":
+            session["fit_card"] = create_fit_card(
+                session["outfit_suggestion"],
+                session["selected_item"],
+            )
+
     return session
 
 
