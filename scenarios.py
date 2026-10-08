@@ -12,29 +12,40 @@ because your criteria are written out of five.
 Three scenarios are filled in to show the shape. Add or change whatever your
 own criteria need — these are a starting point, not a fixed set.
 """
+WARDROBES = ("example", "empty")
 
 SCENARIOS = [
     {
-        # A query the data can match. Criterion 1.
-        "name": "matching query completes",
+        "name": "matching query completes all three tools",
         "query": "vintage graphic tee under $30",
         "wardrobe": "example",
         "criterion": 1,
     },
     {
-        # A query nothing can match. Criterion 2 — the branch.
-        "name": "impossible query stops early",
-        "query": "designer ballgown size XXS under $5",
+        "name": "impossible query stops before outfit tool",
+        "query": "qzxvplmnonexistent",
         "wardrobe": "example",
         "criterion": 2,
     },
     {
-        # A user with nothing saved. One of unit 4's three failure modes.
-        "name": "empty wardrobe",
-        "query": "denim jacket under $50",
-        "wardrobe": "empty",
-        "criterion": None,
+        "name": "selected item ID matches outfit tool input",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "criterion": 3,
     },
+    {
+        "name": "fit card includes title price and platform",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "criterion": 4,
+    },
+    {
+        "name": "all search results respect the 30 dollar limit",
+        "query": "vintage graphic tee under $30",
+        "wardrobe": "example",
+        "criterion": 5,
+    },
+
     # TODO: add what your criteria 3, 4 and 5 need.
     #
     # Set "criterion" to the number in criteria.md that the scenario tests.

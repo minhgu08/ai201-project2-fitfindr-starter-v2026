@@ -214,6 +214,16 @@ code and reviewed my edits, including catching a missing final
 `return session`. I ran the commands locally and checked the
 actual output. It also helped format those results in this README.
 
+### Unit 4 — Evaluation assistance
+
+ChatGPT helped me configure five scenarios and add selected-item IDs
+and returned listing prices to the evaluation report. I ran the
+25 baseline tries locally with caching disabled. 
+
+It reviewed the saved outputs, suggested verdict explanations, and identified an
+unsupported ownership claim that my original criteria did not check.
+I used that evidence to document a tighter future target.
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -234,17 +244,27 @@ actual output. It also helped format those results in this README.
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools and returns a fit card | At least 4/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before suggest_outfit and names what to change | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Selected item ID matches the new_item ID passed to suggest_outfit | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card includes the selected title, price, and platform | At least 4/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. With max_price=30, every returned listing costs at most $30 | Every returned listing; checked in five tries | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+
+Baseline report: [Full before-run output](results/run_2026-10-07_2052_before.md).
+
+All 25 tries ran with caching disabled, using 40 model calls.
+Each criterion was scored using its five corresponding tries.
+No acceptance criteria were revised.
 
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
-```
+Criterion 4, Try 1, from `results/run_2026-10-07_2052_before.md`.
+The caption was returned by `tools.py::create_fit_card()`, called by
+`agent.py::run_agent()`, and recorded by `run_eval.py::write_report()`.
 
+```text
+Scored this Y2K Baby Tee — Butterfly Print for just $18.00! I love styling it with baggy straight-leg jeans and chunky sneakers for an easy, high-contrast streetwear look. Grab it now over on depop before it's gone!
 ```
 
 ---
@@ -269,13 +289,45 @@ that produced it:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes all three tools and returns a fit card | At least 4/5 | MET (5/5) | Each trace shows search through MCP, suggest_outfit, and create_fit_card in order, followed by a non-empty fit card. |
+| 2 | Impossible query stops before suggest_outfit and names what to change | 5/5 | MET (5/5) | Each trace contains only search. Each response suggests broader keywords, a different size, or a higher price limit. |
+| 3 | Selected item ID matches the outfit tool input | 5/5 | MET (5/5) | selected_item_id and the traced new_item_id are both lst_002 in every try. |
+| 4 | Fit card includes selected title, price, and platform | At least 4/5 | MET (5/5) | Each fit card includes Y2K Baby Tee — Butterfly Print, $18.00, and depop. |
+| 5 | Every returned listing respects max_price=30 | Every returned listing; checked in five tries | MET (5/5) | Each try has parsed_max_price=30.0 and ten returned prices ranging from $12 to $30. None exceeds $30. |
+
 
 **Diagnoses**
+
+The likely mechanism is ambiguous perspective in the
+`create_fit_card()` prompt. It asks for a natural social-media caption
+without specifying that the item is a listing the user is considering.
+Although it says not to invent details, the model still adopted a
+seller's voice in the observed output. I will test whether an explicit
+instruction about ownership and perspective reduces this behavior.
+
+All five original criteria were met, so there are no missed criteria
+to diagnose.
+
+Criterion 4 set too low a standard for caption accuracy: it checked
+whether the title, price, and platform appeared, but did not check
+whether the caption invented ownership. In the baseline report,
+Criterion 3, Try 4 includes this sentence:
+
+> Head over to my depop to snag it before it's gone.
+
+The problem appears in the model output returned by
+`tools.py::create_fit_card()`, the third tool in the loop. The caption
+contains the required listing details but adds an unsupported claim
+that the speaker owns the depop account.
+
+A specific tighter future target would require the selected title,
+price, and platform, with no unsupported claims that the user bought,
+owns, or is selling the item, in 5 of 5 tries.
+
+This is a proposed future target. I have not changed the original
+criterion or rescored the baseline against it.
+
+
 
 ## Deliberate Failure Checks
 

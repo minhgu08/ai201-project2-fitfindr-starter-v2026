@@ -193,6 +193,15 @@ def write_report(rows, args):
                 f"- search_results: {len(session.get('search_results') or [])}",
                 "",
             ]
+            lines += [
+                f"- selected_item_id: {item.get('id', '(none)')}",
+                f"- parsed_max_price: {(session.get('parsed') or {}).get('max_price')}",
+                "- returned_listing_prices: " + str([
+                    (listing.get("id"), listing.get("price"))
+                    for listing in (session.get("search_results") or [])
+                ]),
+                "",
+            ]
             if session.get("outfit_suggestion"):
                 lines += ["Outfit suggestion:", "", "```",
                           str(session["outfit_suggestion"]), "```", ""]
