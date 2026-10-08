@@ -144,6 +144,18 @@ def run_agent(query: str, wardrobe: dict) -> dict:
                 
             )
 
+            # To record the search filters, returned listings, branch decision, and convert input to text
+            trace.step(
+                "search_listings (via MCP)",
+                inputs=str(session["parsed"]),
+                returned=session["search_results"],
+                note=(
+                    "No matches: stop before suggest_outfit."
+                    if not session["search_results"]
+                    else "Matches found: select the first listing."
+                ),
+            )
+
             if not session["search_results"]:
                 session["error"] = (
                     "No listings matched. Try broader keywords, a different "
@@ -154,17 +166,48 @@ def run_agent(query: str, wardrobe: dict) -> dict:
             session["selected_item"] = session["search_results"][0]
 
         elif step == "suggest_outfit":
-            session["outfit_suggestion"] = suggest_outfit(
+            try:
+                session["outfit_suggestion"] = suggest_outfit(
                 session["selected_item"],
                 session["wardrobe"],
             )
+                # To record which item was passed, wardrobe item count, and returned advice
+                trace.step(
+                    "suggest_outfit",
+                    inputs=(
+                        f"new_item_id={session['selected_item']['id']}; "
+                        f"wardrobe_items={len(session['wardrobe'].get('items', []))}"
+                    ),
+                    returned=session["outfit_suggestion"],
+                    note="Use the selected item stored in the session.",
+                )
+            except ModelUnavailable as exc:
+                session["error"] = (
+                    f"Could not generate outfit suggestions {exc}"
+                )
+                return session
 
         elif step == "create_fit_card":
-            session["fit_card"] = create_fit_card(
+            try:
+                session["fit_card"] = create_fit_card(
                 session["outfit_suggestion"],
                 session["selected_item"],
             )
-
+                
+                trace.step(
+                    "create_fit_card",
+                    inputs=(
+                        f"new_item_id={session['selected_item']['id']}; "
+                        f"outfit={session['outfit_suggestion']}"
+                    ),
+                    returned=session["fit_card"],
+                    note="Use the outfit suggestion and the same selected item.",
+                )
+            except ModelUnavailable as exc:
+                session["error"] = (
+                    f"Could not generate the fit card {exc}"
+                )
+                return session
     return session
 
 

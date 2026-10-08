@@ -206,6 +206,13 @@ Just scored these Vintage Levi's 501 Jeans — Medium Wash on depop for $38.00! 
   end-to-end query to check that the connected agent still worked.
   The outfit and fit-card responses were served from cache.
 
+### Unit 4 — Failure handling and trace assistance
+
+I asked ChatGPT to explain the failure tests and help add
+`ModelUnavailable` handlers and `trace.step()` calls. It supplied
+code and reviewed my edits, including catching a missing final
+`return session`. I ran the commands locally and checked the
+actual output. It also helped format those results in this README.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
@@ -270,7 +277,53 @@ that produced it:
 
 **Diagnoses**
 
+## Deliberate Failure Checks
 
+### Empty search
+
+Command: `python app.py ask "qzxvplmnonexistent"`
+
+Message from `agent.py::run_agent()`, displayed by `app.py::_ask_one()`:
+
+```text
+No listings matched. Try broader keywords, a different size, or a higher price limit.
+```
+
+The trace confirmed that the agent stopped before `suggest_outfit`.
+No model calls were made.
+
+### Empty wardrobe
+
+Command: `python app.py ask "vintage graphic tee under $30" --empty-wardrobe`
+
+`suggest_outfit()` in `tools.py` returned general styling advice:
+
+```text
+Since a baby tee is fitted and cropped, the main styling rule is to balance the proportions with your bottoms. Here are two easy, wearable ways to style it using common wardrobe staples:
+```
+
+The run completed with an outfit and fit card, using two fresh model calls.
+The advice did not claim that the suggested pieces were already owned.
+
+### Model unavailable
+
+I disabled caching and supplied a deliberately invalid GEMINI_API_KEY
+inside one Python process. I did not modify the real key in `.env`.
+
+Before adding the agent handler, `app.py::main()` displayed the
+`ModelUnavailable` exception without a traceback.
+
+After adding handlers around both model-calling tools in
+`agent.py::run_agent()`, the same test returned:
+
+```text
+Could not generate outfit suggestions The model rejected your API key. Check GEMINI_API_KEY in your .env file, or create a fresh key at aistudio.google.com.
+```
+
+The failed call was in `tools.py::suggest_outfit()`, through
+`generate.py::generate()`. The agent stored the message in
+`session["error"]` and stopped before generating a fit card.
+One model call was attempted.
 
 ---
 
@@ -289,12 +342,60 @@ that produced it:
 **Happy path**
 
 ```
+python app.py ask "vintage graphic tee under $30" --trace
+[1] search_listings (via MCP)
+      in:  {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+      →    Matches found: select the first listing.
+[2] suggest_outfit
+      in:  new_item_id=lst_002; wardrobe_items=10
+      out: Here are two practical, wearable outfits using your new Y2K butterfly baby tee and pieces from your wardrobe: …
+      →    Use the selected item stored in the session.
+[3] create_fit_card
+      in:  new_item_id=lst_002; outfit=Here are two practical, wearable outfits using your new Y2K butterfly baby tee and…
+      out: Score this Y2K Baby Tee — Butterfly Print for just $18.00! It’s giving major early-2000s vibes, perfect for pa…
+      →    Use the outfit suggestion and the same selected item.
+
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   Here are two practical, wearable outfits using your new Y2K butterfly baby tee and pieces from your wardrobe:
+
+### Outfit 1: High-Contrast Streetwear (Y2K Meets Baggy Denim)
+*The fitted, cropped silhouette of the baby tee balances out the volume of the baggy jeans for an authentic early-2000s look.*
+
+*   **Top:** Y2K Butterfly Baby Tee
+*   **Bottoms:** Baggy straight-leg jeans, dark wash (`w_001`)
+*   **Outerwear:** Vintage black denim jacket (`w_006`)
+*   **Shoes:** Chunky white sneakers (`w_007`)
+*   **Bag:** Black crossbody bag (`w_010`)
+
+### Outfit 2: Casual Earth Tones
+*Playing on the softer pink and purple tones in the butterfly graphic by pairing the tee with relaxed neutrals.*
+
+*   **Top:** Y2K Butterfly Baby Tee
+*   **Bottoms:** Wide-leg khaki trousers (`w_002`)
+*   **Accessory:** Brown leather belt (`w_009`) worn with the trousers
+*   **Shoes:** Chunky white sneakers (`w_007`)
+*   **Bag:** Black crossbody bag (`w_010`)
+
+  Fit card: Score this Y2K Baby Tee — Butterfly Print for just $18.00! It’s giving major early-2000s vibes, perfect for pairing with baggy denim and a vintage black jacket for an authentic streetwear look. Grab it now over on depop before it's gone.
+
+0 model calls this session, 2 served from cache
 
 ```
 
 **Empty search**
 
 ```
+python app.py ask "qzxvplmnonexistent" --trace
+[1] search_listings (via MCP)
+      in:  {'description': 'qzxvplmnonexistent', 'size': None, 'max_price': None}
+      out: [] (empty)
+      →    No matches: stop before suggest_outfit.
+
+  No listings matched. Try broader keywords, a different size, or a higher price limit.
+
+0 model calls this session
 
 ```
 
@@ -302,7 +403,11 @@ that produced it:
 behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
-
+Search now runs through MCP. The matching trace shows search,
+outfit suggestions, and fit-card generation in order. The empty-search
+trace shows only search, confirming that the loop stops before
+`suggest_outfit`. The matching run used cached model responses;
+these traces demonstrate execution flow, not repeated evaluation.
 
 
 ---
