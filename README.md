@@ -271,6 +271,86 @@ The caption was returned by `tools.py::create_fit_card()`, called by
 ```text
 Scored this Y2K Baby Tee — Butterfly Print for just $18.00! I love styling it with baggy straight-leg jeans and chunky sneakers for an easy, high-contrast streetwear look. Grab it now over on depop before it's gone!
 ```
+### Evidence from one try per criterion
+These excerpts come from Try 1 of each corresponding scenario in `results/run_2026-10-07_2052_before.md`, recorded by `run_eval.py::write_report()` from `agent.py::run_agent()`
+
+**Criterion 1 — all three tools complete**
+
+The trace shows `search_listings` through MCP, followed by
+`tools.py::suggest_outfit()` and `tools.py::create_fit_card()`.
+
+```text
+[1] search_listings (via MCP)
+      in:  {'description': 'vintage graphic tee', 'size': None, 'max_price': 30.0}
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+      →    Matches found: select the first listing.
+[2] suggest_outfit
+      in:  new_item_id=lst_002; wardrobe_items=10
+      out: Here are two ways to style your new Y2K butterfly baby tee using pieces already in your closet:  ### Outfit 1:…
+      →    Use the selected item stored in the session.
+[3] create_fit_card
+      in:  new_item_id=lst_002; outfit=Here are two ways to style your new Y2K butterfly baby tee using pieces already in…
+      out: Channel early-2000s street style with this Y2K Baby Tee — Butterfly Print, featuring a fitted crop and cute gr…
+      →    Use the outfit suggestion and the same selected item.
+```
+
+The resulting fit card from `tools.py::create_fit_card()`:
+
+```text
+Channel early-2000s street style with this Y2K Baby Tee — Butterfly Print, featuring a fitted crop and cute graphic. Pair it with baggy denim and chunky sneakers for an authentic look, or layer it under a black denim jacket with combat boots. This vintage piece is available now for $18.00 on depop.
+```
+
+**Criterion 2 — empty search stops before the outfit tool**
+
+`mcp_server.py::search_listings()` returned an empty list.
+`agent.py::run_agent()` stopped and supplied advice.
+
+```text
+- stopped early: yes — No listings matched. Try broader keywords, a different size, or a higher price limit.
+- selected_item: (none)
+- search_results: 0
+```
+
+```text
+[1] search_listings (via MCP)
+      in:  {'description': 'qzxvplmnonexistent', 'size': None, 'max_price': None}
+      out: [] (empty)
+      →    No matches: stop before suggest_outfit.
+```
+
+**Criterion 3 — the selected item matches the outfit tool input**
+
+`agent.py::run_agent()` stored the selected item and passed it to
+`tools.py::suggest_outfit()`. These report and trace excerpts show
+the same ID.
+
+```text
+- selected_item_id: lst_002
+```
+
+```text
+[2] suggest_outfit
+      in:  new_item_id=lst_002; wardrobe_items=10
+      out: Here are two ways to style your new Y2K butterfly baby tee using pieces already in your wardrobe:  ### Outfit …
+      →    Use the selected item stored in the session.
+```
+
+**Criterion 4 — the fit card includes title, price, and platform**
+
+See the Criterion 4, Try 1 caption immediately above this subsection,
+returned by `tools.py::create_fit_card()`. It includes
+`Y2K Baby Tee — Butterfly Print`, `$18.00`, and `depop`.
+
+**Criterion 5 — every returned listing respects the $30 limit**
+
+The parsed limit came from `agent.py::run_agent()`. The listing prices
+came from `tools.py::search_listings()`, exposed through
+`mcp_server.py::search_listings()` and called through MCP.
+
+```text
+- parsed_max_price: 30.0
+- returned_listing_prices: [('lst_002', 18.0), ('lst_006', 24.0), ('lst_033', 19.0), ('lst_015', 26.0), ('lst_017', 15.0), ('lst_003', 22.0), ('lst_011', 27.0), ('lst_012', 20.0), ('lst_013', 30.0), ('lst_014', 12.0)]
+```
 
 ---
 
