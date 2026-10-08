@@ -224,6 +224,11 @@ It reviewed the saved outputs, suggested verdict explanations, and identified an
 unsupported ownership claim that my original criteria did not check.
 I used that evidence to document a tighter future target.
 
+ChatGPT also suggested the caption-perspective instructions and helped
+compare the before and after reports, including the ownership diagnostic
+and the service-unavailable error. I applied the edit and ran the
+after evaluation locally.
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -472,24 +477,69 @@ these traces demonstrate execution flow, not repeated evaluation.
      `python run_eval.py --label after` -->
 
 **What I changed:**
+I added explicit perspective and ownership instructions to the prompt
+in `tools.py::create_fit_card()`. The caption should recommend a listing
+the user is considering without claiming a purchase or sale.
 
 **Which failure it was meant to fix:**
+
+The baseline caption for Criterion 3, Try 4 said "my depop",
+an unsupported ownership claim. The original five criteria all passed,
+but they did not check this aspect of caption accuracy.
+
+**How I will measure it:**
+
+I will rerun the same five scenarios with five tries each and caching
+disabled, scoring against the unchanged original criteria.
+
+As an additional diagnostic check, I will compare the five captions
+from the Criterion 4 scenario before and after. A caption passes this
+check if it includes the selected title, price, and platform without
+claiming the speaker bought, owns, listed, or is selling the item.
+
+In the baseline, Try 1 and Try 3 fail this additional check because
+they begin "Scored this", implying a completed purchase.
+Try 2, Try 4, and Try 5 pass: "Score this" in Try 5 is an invitation,
+not a claim that a purchase already happened. The baseline is 3/5.
 
 ### Run Log — After
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools and returns a fit card | At least 4/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before suggest_outfit and names what to change | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Selected item ID matches the new_item ID passed to suggest_outfit | 5/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card includes the selected title, price, and platform | At least 4/5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. With max_price=30, every returned listing costs at most $30 | Every returned listing; checked in five tries | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+
+After report: [Full after-run output](results/run_2026-10-07_2227_after.md).
+
+All 25 tries ran with caching disabled, using 40 model calls.
+Criterion 3, Try 4 passed the ID check: selected_item_id and the
+suggest_outfit input were both lst_002. Caption generation later
+failed with a 503 UNAVAILABLE response. This does not invalidate
+the earlier state check, but the overall run did not finish.
 
 **Did it help, and how do I know:**
 
 <!-- If it made things worse, say that. Honestly reported, that earns full
      credit and is more interesting than one that worked. -->
+The ownership diagnostic improved in this sample, from 3/5 before
+to 5/5 after. I checked the five captions from the Criterion 4
+scenario in each report using the same rule.
 
+| Ownership diagnostic | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Result |
+|---|---|---|---|---|---|---|
+| Before | FAIL | PASS | FAIL | PASS | PASS | 3/5 |
+| After | PASS | PASS | PASS | PASS | PASS | 5/5 |
+
+The two baseline failures said "Scored this", implying a completed
+purchase. All five after captions retained the title, price, and
+platform without claiming ownership, purchase, or sale.
+
+The original five criteria remained MET. These results suggest the
+prompt change helped for this query; five tries on one selected item
+do not establish that it will work for every listing.
 
 
 ---
@@ -499,7 +549,19 @@ these traces demonstrate execution flow, not repeated evaluation.
 <!-- For each criterion still missed: what you'd do, and why you stopped where
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
+No original criterion was missed in its assigned five tries.
+However, Criterion 3, Try 4 could not generate a caption because
+the model service returned 503 UNAVAILABLE.
 
+The failure occurred in tools.py::create_fit_card(), through
+generate.py::generate(). The agent caught ModelUnavailable,
+stored an error message, and returned without a fit card.
+The caption-prompt improvement does not address service availability.
+A future improvement could retry transient service errors with a
+limited number of attempts.
+
+The matching scenarios all selected the same listing, lst_002.
+Other items, query phrasings, and sizes need broader testing.
 
 
 <!-- ═════════════════════════════════════════════════════════════════════

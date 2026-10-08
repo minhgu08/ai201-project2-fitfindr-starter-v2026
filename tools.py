@@ -242,6 +242,13 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     Use two to four sentences. Mention the exact item title, its price, and
     the platform once each. Use the outfit suggestion to describe the style.
     Do not invent details that are not provided.
+    
+    This item is a listing the user is considering, not a confirmed purchase.
+    Write from the perspective of someone recommending the listing.
+    Do not claim that the user or speaker bought, owns, listed, or is selling
+    the item. Avoid phrases such as "Scored this", "Just listed",
+    "Just dropped", and "my depop". Use wording such as "Found this"
+    or "Available on" instead.
 
     Item: {json.dumps(new_item, indent=2)}
     Price to mention: {price_text}
