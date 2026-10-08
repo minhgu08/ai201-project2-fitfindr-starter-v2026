@@ -13,8 +13,7 @@
 > python app.py ask 'vintage graphic tee under $30'
 > ```
 >
-> The tools now run individually.
-> That's the starting position.
+> The three tools and planning loop are implemented. Try FitFindr with python app.py ask "vintage graphic tee under $30".
 >
 > **The rest of this file is your submission.** Fill it in as you go.
 
@@ -108,7 +107,7 @@ FitFindr will search the provided clothing listings using a description, size, a
 **One full query**
 
 ```
-$python app.py ask "vintage graphic tee under $30"
+$ python app.py ask "vintage graphic tee under $30"
 
   Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
 
@@ -189,11 +188,24 @@ Just scored these Vintage Levi's 501 Jeans — Medium Wash on depop for $38.00! 
 - *What came back:* It suggested measurable checks for passing the same listing between tools, including key details in a fit card, and respecting a price limit.
 - *What I changed:* I used those ideas to fill in criteria 3–5 and wrote reasons tied to the session, model-generated captions, and listing prices.
 
-**Moment 2**
 
 - *What I asked for:* I asked ChatGPT to review my completed criteria and tell me whether they were clear.
 - *What came back:* It said the targets were measurable and suggested formatting the code references and using a specific price example for criterion 5.
 - *What I changed:* I kept criterion 5 general so it applies to any maximum price, and noted the formatting suggestion for a final cleanup.
+
+### Unit 4 — MCP assistance
+
+- **What I asked for:** I asked ChatGPT to explain the terminal
+  commands and guide me through moving `search_listings` to MCP.
+- **What came back:** It provided the MCP wrapper and the replacement
+  search call in `agent.py`, with explanations of the inputs and roles.
+  It also helped identify that my saved agent still used the direct call.
+- **What I changed and checked:** I added the wrapper, updated and saved
+  the agent's import and search call, and added comments to explain the
+  code. I ran `python mcp_client.py` to check registration and an
+  end-to-end query to check that the connected agent still worked.
+  The outfit and fit-card responses were served from cache.
+
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
@@ -370,3 +382,15 @@ full. -->
 ---
 
 📖 **How to run this project: [RUNNING.md](RUNNING.md)**
+
+## Unit 4- MCP Move
+
+I registered `search_listings` in `mcp_server.py` and changed
+`agent.py::run_agent()` to call it through `mcp_client.call_tool()`.
+The other two tools still run directly.
+
+`python mcp_client.py` listed the registered tool and its inputs.
+An end-to-end query, `vintage graphic tee under $30`, selected the
+same Y2K Baby Tee — Butterfly Print for $18.00 on depop and returned
+an outfit and fit card. The two model responses came from the build
+cache; this was a connection check, not the repeated evaluation.

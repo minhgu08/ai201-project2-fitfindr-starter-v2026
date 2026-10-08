@@ -99,6 +99,18 @@ mcp = FastMCP("fitfindr", log_level="WARNING")
 # `max_price: float | None = None` becomes an optional number. Getting these
 # wrong is the most common reason a call is rejected.
 
+@mcp.tool()                             # Announce this following func as an MCP tool
+def search_listings(
+    description: str,                   # Requires description text
+    size: str | None = None,            # Allow size string
+    max_price: float | None = None,     # allow numeric price limit
+) -> list[dict]:                        # declare a list of listing records as result
+    """
+    Search clothing listings by description keywords, with optional size
+    and inclusive maximum price in dollars. Return matching listing
+    dictionaries ranked by keyword overlap, or an empty list if none match.
+    """
+    return _search_listings_impl(description, size, max_price)          # Run existing search and return its result
 
 if __name__ == "__main__":
     mcp.run()
